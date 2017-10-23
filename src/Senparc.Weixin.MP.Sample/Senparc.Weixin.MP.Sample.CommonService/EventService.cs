@@ -9,16 +9,24 @@
 ----------------------------------------------------------------*/
 
 using System;
-using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using Senparc.Weixin.Exceptions;
 using Senparc.Weixin.MP.Entities;
 using Senparc.Weixin.MP.Helpers;
+
+#if NET45
+using System.Web;
+using System.Configuration;
 using Senparc.Weixin.MP.Sample.CommonService.TemplateMessage;
+#else
+using Microsoft.AspNetCore.Http;
+using Senparc.Weixin.MP.Sample.CommonService.TemplateMessage;
+using Senparc.Weixin.MP.Sample.CommonService.Utilities;
+#endif
+
 
 namespace Senparc.Weixin.MP.Sample.CommonService
 {
@@ -47,13 +55,21 @@ namespace Senparc.Weixin.MP.Sample.CommonService
                     }
                 case Event.LOCATION:
                     throw new Exception("暂不可用");
-                    //break;
+                //break;
                 case Event.subscribe://订阅
                     {
                         var strongResponseMessage = requestMessage.CreateResponseMessage<ResponseMessageText>();
 
                         //获取Senparc.Weixin.MP.dll版本信息
-                        var fileVersionInfo = FileVersionInfo.GetVersionInfo(HttpContext.Current.Server.MapPath("~/bin/Senparc.Weixin.MP.dll"));
+#if NET45
+                        var dllPath = HttpContext.Current.Server.MapPath("~/bin/Senparc.Weixin.MP.dll");
+#else
+                        var dllPath = Server.GetMapPath("~/bin/Release/netcoreapp1.1/Senparc.Weixin.MP.dll");
+#endif
+
+                        var fileVersionInfo = FileVersionInfo.GetVersionInfo(dllPath);
+
+
                         var version = fileVersionInfo.FileVersion;
                         strongResponseMessage.Content = string.Format(
                             "欢迎关注【Senparc.Weixin.MP 微信公众平台SDK】，当前运行版本：v{0}。\r\n您还可以发送【位置】【图片】【语音】信息，查看不同格式的回复。\r\nSDK官方地址：http://sdk.weixin.senparc.com",
@@ -77,7 +93,7 @@ namespace Senparc.Weixin.MP.Sample.CommonService
                     throw new ArgumentOutOfRangeException();
             }
 
-            return responseMessage;         
+            return responseMessage;
         }
 
         public void ConfigOnWeixinExceptionFunc(WeixinException ex)
@@ -86,8 +102,13 @@ namespace Senparc.Weixin.MP.Sample.CommonService
             {
                 Task.Factory.StartNew(async () =>
                 {
+#if NET45
                     var appId = ConfigurationManager.AppSettings["WeixinAppId"];
-                    string openId = "olPjZjsXuQPJoV0HlruZkNzKc91E";//收到通知的管理员OpenId
+#else
+                    var appId = "AppId";
+#endif
+
+                    string openId = "";//收到通知的管理员OpenId
                     var host = "A1 / AccessTokenOrAppId：" + (ex.AccessTokenOrAppId ?? "null");
                     string service = null;
                     string message = ex.Message;
@@ -113,6 +134,8 @@ namespace Senparc.Weixin.MP.Sample.CommonService
                                 ReturnCode.用户未授权该api,
                                 ReturnCode.参数错误invalid_parameter,
                                 ReturnCode.接口调用超过限制,
+                                ReturnCode.需要接收者关注,//43004
+
                                 //其他更多可能的情况
                             };
                         if (ignoreErrorCodes.Contains(jsonEx.JsonResult.errcode))
@@ -139,8 +162,11 @@ namespace Senparc.Weixin.MP.Sample.CommonService
                         var data = new WeixinTemplate_ExceptionAlert(string.Format("微信发生异常（延时{0}秒）", sleepSeconds), host, service, status, message, remark);
 
                         //修改OpenId、启用以下代码后即可收到模板消息
-                        //var result = await Senparc.Weixin.MP.AdvancedAPIs.TemplateApi.SendTemplateMessageAsync(appId, openId, data.TemplateId,
-                        //        url, data);
+                        if (!string.IsNullOrEmpty(openId))
+                        {
+                            var result = await Senparc.Weixin.MP.AdvancedAPIs.TemplateApi.SendTemplateMessageAsync(appId, openId, data.TemplateId,
+                              url, data);
+                        }
                     }
                 });
             }
