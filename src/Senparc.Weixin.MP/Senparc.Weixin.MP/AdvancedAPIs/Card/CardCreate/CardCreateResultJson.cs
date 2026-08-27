@@ -1,5 +1,25 @@
-﻿/*----------------------------------------------------------------
-    Copyright (C) 2017 Senparc
+﻿#region Apache License Version 2.0
+/*----------------------------------------------------------------
+
+Copyright 2026 Jeffrey Su & Suzhou Senparc Network Technology Co.,Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the
+License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions
+and limitations under the License.
+
+Detail: https://github.com/JeffreySu/WeiXinMPSDK/blob/master/license.md
+
+----------------------------------------------------------------*/
+#endregion Apache License Version 2.0
+
+/*----------------------------------------------------------------
+    Copyright (C) 2026 Senparc
     
     文件名：CardCreateResultJson.cs
     文件功能描述：创建卡券返回结果
@@ -31,6 +51,8 @@
     创建描述：CreateQRResultJson添加url和show_qrcode_url属性
 
 ----------------------------------------------------------------*/
+
+
 
 using System.CodeDom;
 using System.Collections.Generic;
@@ -263,7 +285,7 @@ namespace Senparc.Weixin.MP.AdvancedAPIs.Card
     }
     /// <summary>
     /// 生成卡券二维码返回结果
-    /// API：https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1451025062&token=&lang=zh_CN
+    /// API：<see href="https://mp.weixin.qq.com/wiki?t=resource/res_main&amp;id=mp1451025062&amp;token=&amp;lang=zh_CN"/>
     /// </summary>
     public class CreateQRResultJson : WxJsonResult
     {
@@ -324,4 +346,16 @@ namespace Senparc.Weixin.MP.AdvancedAPIs.Card
         ///
         public bool send_check { get; set; }
     }
+
+    /// <summary>
+    /// 获取开卡插件参数
+    /// </summary>
+    public class Card_GetUrlResultJson:WxJsonResult
+    {
+        /// <summary>
+        /// 返回的url，内含调用开卡插件所需的参数
+        /// </summary>
+        public string url { get; set; }
+    }
 }
+

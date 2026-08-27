@@ -1,10 +1,13 @@
+var signalR = require("../../utils/signalr.1.0.js")
+
+var connection;
 var app = getApp()
 var socketOpen = false;//WebSocket 打开状态
 Page({
   data: {
     messageTip: '',
     messageTextArr:[],
-    messageContent:'',
+    messageContent:'TEST',
     userinfo:{}
   },
   //sendMessage
@@ -17,9 +20,9 @@ Page({
 
        //如果使用Senparc.WebSocket，必须严格按照以下data数据字段发送（只能多不能少）
        var submitData = JSON.stringify({
-          messsage:msg,//必填
-          sessionId:wx.getStorageSync("sessionId"),//选填，不需要可输入''
-          formId:e.detail.formId//选填formId用于发送模板消息，不需要可输入''
+          Message:msg,//必填
+          SessionId:wx.getStorageSync("sessionId"),//选填，不需要可输入''
+          FormId:e.detail.formId//选填formId用于发送模板消息，不需要可输入''
         });
 
       wx.sendSocketMessage({
@@ -40,12 +43,15 @@ Page({
 
     //连接 Websocket
     wx.connectSocket({
-      url: 'wss://sdk.weixin.senparc.com/SenparcWebSocket',
+      // url: wx.getStorageSync('wssDomainName') + '/SenparcWebSocket',
+      url: wx.getStorageSync('wssDomainName') + '/SenparcHub',
       header:{ 
         'content-type': 'application/json'
       },
       method:"GET"
     });
+
+
     //WebSocket 连接成功
     wx.onSocketOpen(function(res) {
       console.log('WebSocket 连接成功！')
@@ -53,14 +59,14 @@ Page({
       that.setData({
         messageTip:'WebSocket 连接成功！'
       })
-    })
+        })
     //收到 WebSocket 推送消息
     wx.onSocketMessage(function(res) {
       console.log('收到服务器内容：' + res.data)
       var jsonResult = JSON.parse(res.data);
       var currentIndex= that.data.messageTextArr.length+1;
       var newArr = that.data.messageTextArr;
-      newArr.push(
+      newArr.unshift(
         {
           index:currentIndex,
           content:jsonResult.content,
